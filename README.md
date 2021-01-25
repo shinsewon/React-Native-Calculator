@@ -2,8 +2,6 @@
 
 ## 리덕스를 사용하여 구현한 계산기 입니다.
 
-<img src="/src/assert/image/poing.png"/>
-
 # # 작업 결과물
 
 <div>
