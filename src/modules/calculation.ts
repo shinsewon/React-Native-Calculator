@@ -5,10 +5,12 @@ const CLICK = 'calculation/CLICK' as const;
 const ADD_OPERATOR = 'calculation/addOperator' as const;
 
 const initialState: {
-  calculationTotal: any;
-  viewCalculation: string;
+  calculationTotal: any[];
+  viewCalculation: string | number;
+  operatorBox: string[];
 } = {
   calculationTotal: [],
+  operatorBox: [],
   viewCalculation: '0',
 };
 
@@ -33,6 +35,13 @@ export default function calculation(
     case CLICK:
       if (typeof action.payload === 'number') {
         const number = action.payload;
+        if (state.operatorBox.length) {
+          return {
+            ...state,
+            calculationTotal: [...state.calculationTotal, number],
+            operatorBox: [...state.operatorBox, number],
+          };
+        }
         if (
           typeof state.calculationTotal[state.calculationTotal.length - 1] ===
             'string' ||
@@ -41,8 +50,10 @@ export default function calculation(
           return {
             ...state,
             calculationTotal: [...state.calculationTotal, number],
+            // operatorBox: [...state.operatorBox, number],
           };
         }
+
         const newcalculationTotal = [...state.calculationTotal];
         if (number === 0) {
           newcalculationTotal[newcalculationTotal.length - 1] *= 10;
@@ -55,54 +66,115 @@ export default function calculation(
           calculationTotal: newcalculationTotal,
         };
       }
-      return {
-        ...state,
-        calculationTotal: state.calculationTotal.concat(action.payload),
-      };
+
+      if (typeof action.payload === 'string') {
+        return {
+          ...state,
+          operatorBox: [...state.operatorBox, action.payload],
+        };
+      }
+
     case ADD_OPERATOR:
       if (!state.calculationTotal.length) {
         return state;
       }
-      return {
-        ...state,
-        calculationTotal: state.calculationTotal.concat(action.payload),
-      };
+      if (state.operatorBox.length && state.viewCalculation !== '0') {
+        return {
+          ...state,
+          calculationTotal: [...state.calculationTotal, action.payload],
+          operatorBox: [action.payload],
+        };
+      } else {
+        return {
+          ...state,
+          calculationTotal: state.calculationTotal.concat(action.payload),
+        };
+      }
     case REMOVE:
     case RESET:
-      return {...state, calculationTotal: [], viewCalculation: '0'};
+      return {
+        ...state,
+        calculationTotal: [],
+        operatorBox: [],
+        viewCalculation: '0',
+      };
+
     case PRINT:
+      if (
+        state.calculationTotal[state.calculationTotal.length - 2] ===
+        state.operatorBox[state.operatorBox.length - 2]
+      ) {
+        const sum = state.operatorBox.join(' ');
+
+        return {
+          ...state,
+          viewCalculation: eval(state.viewCalculation + sum),
+        };
+      }
+      if (
+        typeof state.calculationTotal[state.calculationTotal.length - 1] ===
+        'string'
+      ) {
+        return {
+          ...state,
+          calculationTotal: [],
+          operatorBox: [],
+          viewCalculation: '0',
+        };
+      }
+      //999999넘어갈때
+      if (state.viewCalculation > 9999999999) {
+        return {
+          ...state,
+          viewCalculation: '9,999,999,999',
+          calculationTotal: [],
+        };
+      }
+      // calculationTotal이 빈 배열일때
       if (!state.calculationTotal.length) {
         return state;
       }
-      if (state.viewCalculation !== '0') {
-        const finalOper = state.calculationTotal.reduce(
-          (acc: any, cur: any, idx: number) => {
-            const operArr = ['+', '-', '*', '/'];
-            const arr = [];
-            if (operArr.includes(cur)) {
-              arr.push(cur, state.calculationTotal[idx + 1]);
-              return (acc = arr);
-            }
-            return acc;
-          },
-          [],
-        );
-        const newresult = eval(
-          [...state.calculationTotal, ...finalOper].join(''),
-        )
-          .toString()
-          .split();
+      // viewCalculation이 0이 아니고, calculationTotal이 있을때
+      if (state.viewCalculation !== '0' && state.calculationTotal.length) {
+        const newResult =
+          Math.round(
+            eval([...state.calculationTotal, ...state.operatorBox].join('')) *
+              10 ** 5,
+          ) /
+          10 ** 5;
         return {
-          calculationTotal: [...state.calculationTotal, ...finalOper],
-          viewCalculation: newresult,
+          ...state,
+          calculationTotal: [newResult],
+          viewCalculation: newResult,
         };
       }
       const changeString = state.calculationTotal.join('');
-      const result = eval(changeString).toString().split();
-      return {
-        ...state,
-        viewCalculation: result,
-      };
+      //정수 일때(소수점 X)
+      if (Number.isInteger(eval(changeString)) === true) {
+        const evalRound = Math.round(eval(changeString) * 10 ** 5) / 10 ** 5;
+        return {
+          ...state,
+          viewCalculation: evalRound,
+          calculationTotal: [evalRound],
+          operatorBox: state.calculationTotal.slice(
+            state.calculationTotal.length - 2,
+          ),
+        };
+      }
+      //정수가 아닐때(소수점 O)
+      if (Number.isInteger(eval(changeString)) === false) {
+        const evalRound = +eval(changeString).toString().split();
+        const result = evalRound;
+        return {
+          ...state,
+          viewCalculation: result,
+          calculationTotal: [],
+          operatorBox: state.calculationTotal.slice(
+            state.calculationTotal.length - 2,
+          ),
+        };
+      }
+
     default:
       return state;
   }

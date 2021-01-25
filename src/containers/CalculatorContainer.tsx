@@ -9,12 +9,11 @@ import Icon from 'react-native-vector-icons/Entypo';
 
 const CalculatorContainer = () => {
   const [darkMode, setDarkMode] = useState(false);
-
   const dispatch = useDispatch();
   const calculator = useSelector((state: RootState) => state.calculation);
 
   const handleOnClick = (btn: string | number) => {
-    if (typeof btn === 'number') {
+    if (typeof btn === 'number' || btn === '.') {
       dispatch(click(btn));
     }
     if (btn === '+' || btn === '-' || btn === '*' || btn === '/') {
@@ -83,7 +82,6 @@ const CalculatorContainer = () => {
       fontSize: 28,
     },
   });
-
   return (
     <View>
       <View style={styles.results}>
@@ -98,7 +96,9 @@ const CalculatorContainer = () => {
         </TouchableOpacity>
 
         <Text style={styles.historyText}>{calculator.calculationTotal}</Text>
-        <Text style={styles.resultText}>{calculator.viewCalculation}</Text>
+        <Text style={styles.resultText}>
+          {calculator.viewCalculation.toLocaleString(2)}
+        </Text>
       </View>
       <View style={styles.buttons}>
         {BUTTON.map((btn: string | number, index: number) => {

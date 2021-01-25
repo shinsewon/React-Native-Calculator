@@ -1,11 +1,12 @@
 import React from 'react';
 import {SafeAreaView} from 'react-native';
-import CalculatorContainer from './src/containers/CalculatorContainer';
 import {createStore} from 'redux';
 import {Provider} from 'react-redux';
+import {composeWithDevTools} from 'redux-devtools-extension';
 import rootReducer from './src/modules';
+import CalculatorContainer from './src/containers/CalculatorContainer';
 
-const store = createStore(rootReducer);
+const store = createStore(rootReducer, composeWithDevTools());
 
 const App = () => {
   return (
