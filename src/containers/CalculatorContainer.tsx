@@ -13,16 +13,8 @@ const CalculatorContainer = () => {
   const dispatch = useDispatch();
   const calculator = useSelector((state: RootState) => state.calculation);
 
-  console.log('최종 state>>', calculator);
-  console.log(
-    'calculationTotal 타입 확인>>',
-    typeof calculator.calculationTotal,
-  );
-
   const handleOnClick = (btn: string | number) => {
-    // console.log('btn>>', btn);
     if (typeof btn === 'number') {
-      // dispatch(click(calculator.currentNumber * 10 + btn));
       dispatch(click(btn));
     }
     if (btn === '+' || btn === '-' || btn === '*' || btn === '/') {
@@ -38,34 +30,6 @@ const CalculatorContainer = () => {
       dispatch(reset());
     }
   };
-
-  // const calculate = () => {
-  //   let lastArr = currentNumber[currentNumber.length - 1];
-  //   if (
-  //     lastArr === '/' ||
-  //     lastArr === '*' ||
-  //     lastArr === '-' ||
-  //     lastArr === '+' ||
-  //     lastArr === '.'
-  //   ) {
-  //     setCurrentNumber(currentNumber);
-  //   } else {
-  //     let result = eval(currentNumber).toString();
-  //     setCurrentNumber(result);
-  //     return;
-  //   }
-  // };
-
-  // console.log('calculator.number.length>>', calculator.number.length);
-
-  // const getString = (): string => {
-  //   if (!calculator.number.length) {
-  //     return '';
-  //   }
-  //   return calculator.number.reduce((acc: string, val: number, idx: number) => {
-  //     return acc + `${val}${calculator.operator[idx]}`;
-  //   }, '');
-  // };
 
   const styles = StyleSheet.create({
     results: {
@@ -135,7 +99,6 @@ const CalculatorContainer = () => {
 
         <Text style={styles.historyText}>{calculator.calculationTotal}</Text>
         <Text style={styles.resultText}>{calculator.viewCalculation}</Text>
-        {/* <Text style={styles.resultText}>{`${getString()}${calculator.currentNumber}`}</Text> */}
       </View>
       <View style={styles.buttons}>
         {BUTTON.map((btn: string | number, index: number) => {
