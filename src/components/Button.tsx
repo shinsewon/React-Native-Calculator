@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {memo} from 'react';
 import {StyleSheet, Text, TouchableOpacity} from 'react-native';
 
 interface IBtnProps {
@@ -7,10 +7,11 @@ interface IBtnProps {
   fontColor?: boolean;
   darkMode: boolean;
   minWidth?: string;
+  getBackgroundColor?: (btn: string | number) => string;
   handleOnClick: (btn: string | number) => void;
 }
 
-export const Button: React.FC<IBtnProps> = ({
+const Button: React.FC<IBtnProps> = ({
   btn,
   backgroundColor,
   handleOnClick,
@@ -24,10 +25,11 @@ export const Button: React.FC<IBtnProps> = ({
       alignItems: 'center',
       justifyContent: 'center',
       height: 70,
-      margin: 10,
+      marginVertical: 15,
+      marginHorizontal: 10,
       borderRadius: 50,
       borderWidth: 1,
-      flex: 2,
+      flex: 1,
     },
     textButton: {
       color: fontColor ? 'white' : darkMode ? '#b5b7bb' : '#7c7c7c',
@@ -42,3 +44,5 @@ export const Button: React.FC<IBtnProps> = ({
     </TouchableOpacity>
   );
 };
+
+export default memo(Button);

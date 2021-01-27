@@ -1,18 +1,26 @@
-import React, {useState} from 'react';
+import React, {useState, useCallback} from 'react';
 import {StyleSheet, Text, View, TouchableOpacity} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
-import {print, remove, reset, click, addOperator} from '../modules/calculation';
-import {Button} from '../components';
-import {BUTTON} from '../utils/config';
-import {RootState} from '../modules';
+import {
+  print,
+  reset,
+  click,
+  addOperator,
+  ICalculatorState,
+} from '@modules/calculation';
+import {RootState} from '@modules/index';
+import Button from '@components/Button';
+import {BUTTONS} from '@utils/config';
 import Icon from 'react-native-vector-icons/Entypo';
 
 const CalculatorContainer = () => {
   const [darkMode, setDarkMode] = useState(false);
   const dispatch = useDispatch();
-  const calculator = useSelector((state: RootState) => state.calculation);
+  const calculator: ICalculatorState = useSelector(
+    (state: RootState) => state.calculation,
+  );
 
-  const handleOnClick = (btn: string | number) => {
+  const handleOnClick = useCallback((btn: string | number) => {
     if (typeof btn === 'number' || btn === '.') {
       dispatch(click(btn));
     }
@@ -22,13 +30,10 @@ const CalculatorContainer = () => {
     if (btn === '=') {
       dispatch(print());
     }
-    if (btn === 'DEL') {
-      dispatch(remove());
-    }
     if (btn === 'C') {
       dispatch(reset());
     }
-  };
+  }, []);
 
   const styles = StyleSheet.create({
     results: {
@@ -63,23 +68,10 @@ const CalculatorContainer = () => {
     },
     buttons: {
       width: '100%',
-      height: '70%',
+      height: '60%',
       backgroundColor: darkMode ? '#282f3b' : '#f5f5f5',
       flexDirection: 'row',
       flexWrap: 'wrap',
-      borderColor: 'red',
-    },
-    button: {
-      borderColor: darkMode ? '#3f4d5b' : '#e5e5e5',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minWidth: '24%',
-      height: '20%',
-      flex: 2,
-    },
-    textButton: {
-      color: darkMode ? '#b5b7bb' : '#7c7c7c',
-      fontSize: 28,
     },
   });
   return (
@@ -94,91 +86,94 @@ const CalculatorContainer = () => {
             color={darkMode ? 'white' : 'black'}
           />
         </TouchableOpacity>
-
         <Text style={styles.historyText}>{calculator.calculationTotal}</Text>
         <Text style={styles.resultText}>
-          {calculator.viewCalculation.toLocaleString(2)}
+          {calculator.viewCalculation.toLocaleString()}
         </Text>
       </View>
       <View style={styles.buttons}>
-        {BUTTON.map((btn: string | number, index: number) => {
-          const changeBackgroundColor =
-            typeof btn === 'number'
-              ? darkMode
-                ? '#303946'
-                : '#fff'
-              : darkMode === true
-              ? '#414853'
-              : '#e6d9d9';
+        {BUTTONS.map((btn: string | number, index: number) => {
+          const getBackgroundColor = (btn: string | number): string => {
+            if (btn === '.') {
+              if (darkMode) {
+                return '#303946';
+              } else {
+                if (darkMode) {
+                  return '#414853';
+                } else {
+                  return '#fff';
+                }
+              }
+            }
+            if (typeof btn === 'number') {
+              if (darkMode) {
+                return '#303946';
+              } else {
+                return '#fff';
+              }
+            } else {
+              if (darkMode) {
+                return '#414853';
+              } else {
+                return '#ededed';
+              }
+            }
+          };
 
-          const delBackgroundChange =
-            btn === '.'
-              ? darkMode
-                ? '#303946'
-                : '#fff'
-              : darkMode === true
-              ? '#414853'
-              : '#dedede';
-          const resetBackgroundChange =
-            typeof btn === 'number'
-              ? darkMode
-                ? '#303946'
-                : '#fff'
-              : darkMode === true
-              ? '#414853'
-              : '#ededed';
-
-          return btn === '=' ||
+          if (
+            btn === '=' ||
             btn === '/' ||
             btn === '*' ||
             btn === '-' ||
-            btn === '+' ? (
-            <Button
-              key={index}
-              btn={btn}
-              backgroundColor={'#fed330'}
-              fontColor={true}
-              handleOnClick={() => handleOnClick(btn)}
-              darkMode={darkMode}
-              minWidth={'20%'}
-            />
-          ) : btn === 0 ? (
-            <Button
-              key={index}
-              btn={btn}
-              backgroundColor={changeBackgroundColor}
-              handleOnClick={() => handleOnClick(btn)}
-              darkMode={darkMode}
-              minWidth={'30%'}
-            />
-          ) : btn === '.' || btn === 'DEL' ? (
-            <Button
-              key={index}
-              btn={btn}
-              backgroundColor={delBackgroundChange}
-              handleOnClick={() => handleOnClick(btn)}
-              darkMode={darkMode}
-              minWidth={'30%'}
-            />
-          ) : btn === 'C' ? (
-            <Button
-              key={index}
-              btn={btn}
-              backgroundColor={resetBackgroundChange}
-              handleOnClick={() => handleOnClick(btn)}
-              darkMode={darkMode}
-              minWidth={'30%'}
-            />
-          ) : (
-            <Button
-              key={index}
-              btn={btn}
-              backgroundColor={resetBackgroundChange}
-              handleOnClick={() => handleOnClick(btn)}
-              darkMode={darkMode}
-              minWidth={'20%'}
-            />
-          );
+            btn === '+'
+          ) {
+            return (
+              <Button
+                key={index}
+                btn={btn}
+                backgroundColor={'#fed330'}
+                fontColor={true}
+                handleOnClick={handleOnClick}
+                darkMode={darkMode}
+                minWidth={'20%'}
+              />
+            );
+          }
+          if (btn === 0 || btn === 'C') {
+            return (
+              <Button
+                key={index}
+                btn={btn}
+                backgroundColor={getBackgroundColor(btn)}
+                handleOnClick={handleOnClick}
+                darkMode={darkMode}
+                minWidth={'30%'}
+              />
+            );
+          }
+          if (btn === '.' || btn === 'DEL') {
+            return (
+              <Button
+                key={index}
+                btn={btn}
+                backgroundColor={getBackgroundColor(btn)}
+                handleOnClick={handleOnClick}
+                darkMode={darkMode}
+                minWidth={'30%'}
+              />
+            );
+          } else {
+            return (
+              <Button
+                key={index}
+                btn={btn}
+                backgroundColor={getBackgroundColor(btn)}
+                handleOnClick={handleOnClick}
+                darkMode={darkMode}
+                minWidth={'20%'}
+              />
+            );
+          }
         })}
       </View>
     </View>

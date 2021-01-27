@@ -1,21 +1,20 @@
 const PRINT = 'calculation/PRINT' as const;
-const REMOVE = 'calculation/REMOVE' as const;
 const RESET = 'calculation/RESET' as const;
 const CLICK = 'calculation/CLICK' as const;
 const ADD_OPERATOR = 'calculation/addOperator' as const;
-
-const initialState: {
-  calculationTotal: any[];
+export interface ICalculatorState {
+  calculationTotal: string[] | number[];
+  operatorBox: string[] | number[];
   viewCalculation: string | number;
-  operatorBox: string[];
-} = {
+}
+
+const initialState: ICalculatorState = {
   calculationTotal: [],
   operatorBox: [],
   viewCalculation: '0',
 };
 
 export const print = () => ({type: PRINT});
-export const remove = () => ({type: REMOVE});
 export const reset = () => ({type: RESET});
 export const click = (payload: string | number) => ({type: CLICK, payload});
 export const addOperator = (payload: string) => ({
@@ -23,74 +22,92 @@ export const addOperator = (payload: string) => ({
   payload,
 });
 
-// type CounterAction =
-// | ReturnType<typseof add>
-// | ReturnType<typeof subtract>
+type CalculationAction =
+  | ReturnType<typeof print>
+  | ReturnType<typeof reset>
+  | ReturnType<typeof click>
+  | ReturnType<typeof addOperator>;
 
 export default function calculation(
-  state = initialState,
-  action: {type: string; payload: number | string},
+  state: ICalculatorState = initialState,
+  action: CalculationAction,
 ) {
+  const {calculationTotal, operatorBox, viewCalculation} = state;
   switch (action.type) {
     case CLICK:
+      // 숫자 클릭 했을때
       if (typeof action.payload === 'number') {
         const number = action.payload;
-        if (state.operatorBox.length) {
+        // 연산자박스에 연산자가 담겨 있을때
+        if (operatorBox.length) {
           return {
             ...state,
-            calculationTotal: [...state.calculationTotal, number],
-            operatorBox: [...state.operatorBox, number],
+            calculationTotal: [...calculationTotal, number],
+            operatorBox: [...operatorBox, number],
           };
         }
         if (
-          typeof state.calculationTotal[state.calculationTotal.length - 1] ===
-            'string' ||
-          state.calculationTotal.length === 0
+          typeof calculationTotal[calculationTotal.length - 1] === 'string' ||
+          calculationTotal.length === 0
         ) {
           return {
             ...state,
-            calculationTotal: [...state.calculationTotal, number],
-            // operatorBox: [...state.operatorBox, number],
+            calculationTotal: [...calculationTotal, number],
           };
         }
-
-        const newcalculationTotal = [...state.calculationTotal];
+        const newcalculationTotal = [...calculationTotal];
+        let lastnumber = Number(
+          newcalculationTotal[newcalculationTotal.length - 1],
+        );
+        // 0 클릭 했을때
         if (number === 0) {
-          newcalculationTotal[newcalculationTotal.length - 1] *= 10;
+          lastnumber *= 10;
         } else {
-          newcalculationTotal[newcalculationTotal.length - 1] =
-            newcalculationTotal[newcalculationTotal.length - 1] * 10 + number;
+          lastnumber = lastnumber * 10 + number;
         }
+        newcalculationTotal[newcalculationTotal.length - 1] = lastnumber;
         return {
           ...state,
           calculationTotal: newcalculationTotal,
         };
       }
-
-      if (typeof action.payload === 'string') {
+      //소수점'.' 클릭 했을때
+      if (action.payload === '.') {
         return {
           ...state,
-          operatorBox: [...state.operatorBox, action.payload],
+          calculationTotal: [...calculationTotal, action.payload],
         };
       }
+      return state;
 
+    /// +,-,*,/ 눌렀을때
     case ADD_OPERATOR:
-      if (!state.calculationTotal.length) {
-        return state;
-      }
-      if (state.operatorBox.length && state.viewCalculation !== '0') {
+      const sum = calculationTotal[calculationTotal.length - 1];
+      if (sum === '+' || sum === '-' || sum === '*' || sum === '/') {
+        const arr = [...calculationTotal];
+        arr[arr.length - 1] = action.payload;
         return {
           ...state,
-          calculationTotal: [...state.calculationTotal, action.payload],
+          calculationTotal: arr,
+          operatorBox: [action.payload],
+        };
+      }
+      if (!calculationTotal.length) {
+        return state;
+      }
+      if (operatorBox.length && viewCalculation !== '0') {
+        return {
+          ...state,
+          calculationTotal: [...calculationTotal, action.payload],
           operatorBox: [action.payload],
         };
       } else {
         return {
           ...state,
-          calculationTotal: state.calculationTotal.concat(action.payload),
+          calculationTotal: [...calculationTotal].concat(action.payload),
         };
       }
-    case REMOVE:
+    //초기화
     case RESET:
       return {
         ...state,
@@ -98,23 +115,29 @@ export default function calculation(
         operatorBox: [],
         viewCalculation: '0',
       };
-
+    // 합계(=) 눌렀을때
     case PRINT:
+      const MAX_NUMBER = 9999999999;
       if (
-        state.calculationTotal[state.calculationTotal.length - 2] ===
-        state.operatorBox[state.operatorBox.length - 2]
+        calculationTotal[calculationTotal.length - 2] ===
+        operatorBox[operatorBox.length - 2]
       ) {
-        const sum = state.operatorBox.join(' ');
-
-        return {
-          ...state,
-          viewCalculation: eval(state.viewCalculation + sum),
-        };
+        if (viewCalculation > MAX_NUMBER) {
+          return {
+            ...state,
+            calculationTotal: [MAX_NUMBER],
+            viewCalculation: MAX_NUMBER,
+            operatorBox: [],
+          };
+        } else {
+          const sum = state.operatorBox.join('');
+          return {
+            ...state,
+            viewCalculation: eval(viewCalculation + sum),
+          };
+        }
       }
-      if (
-        typeof state.calculationTotal[state.calculationTotal.length - 1] ===
-        'string'
-      ) {
+      if (typeof calculationTotal[calculationTotal.length - 1] === 'string') {
         return {
           ...state,
           calculationTotal: [],
@@ -123,58 +146,76 @@ export default function calculation(
         };
       }
       //999999넘어갈때
-      if (state.viewCalculation > 9999999999) {
+      if (viewCalculation >= MAX_NUMBER) {
         return {
           ...state,
-          viewCalculation: '9,999,999,999',
-          calculationTotal: [],
+          viewCalculation: MAX_NUMBER,
+          calculationTotal: [MAX_NUMBER],
         };
       }
       // calculationTotal이 빈 배열일때
-      if (!state.calculationTotal.length) {
+      if (!calculationTotal.length) {
         return state;
       }
       // viewCalculation이 0이 아니고, calculationTotal이 있을때
-      if (state.viewCalculation !== '0' && state.calculationTotal.length) {
+      if (viewCalculation !== '0' && calculationTotal.length) {
         const newResult =
           Math.round(
-            eval([...state.calculationTotal, ...state.operatorBox].join('')) *
-              10 ** 5,
+            eval([...calculationTotal, ...operatorBox].join('')) * 10 ** 5,
           ) /
           10 ** 5;
-        return {
-          ...state,
-          calculationTotal: [newResult],
-          viewCalculation: newResult,
-        };
+        if (newResult > MAX_NUMBER) {
+          return {
+            ...state,
+            viewCalculation: MAX_NUMBER,
+            calculationTotal: [MAX_NUMBER],
+          };
+        } else {
+          return {
+            ...state,
+            calculationTotal: [newResult],
+            viewCalculation: newResult,
+          };
+        }
       }
-      const changeString = state.calculationTotal.join('');
+      const changeString = calculationTotal.join('');
       //정수 일때(소수점 X)
       if (Number.isInteger(eval(changeString)) === true) {
-        const evalRound = Math.round(eval(changeString) * 10 ** 5) / 10 ** 5;
-        return {
-          ...state,
-          viewCalculation: evalRound,
-          calculationTotal: [evalRound],
-          operatorBox: state.calculationTotal.slice(
-            state.calculationTotal.length - 2,
-          ),
-        };
+        if (+eval(changeString) > MAX_NUMBER) {
+          return {
+            ...state,
+            viewCalculation: MAX_NUMBER,
+            calculationTotal: [MAX_NUMBER],
+          };
+        } else {
+          const evalRound = Math.round(eval(changeString) * 10 ** 5) / 10 ** 5;
+          return {
+            ...state,
+            viewCalculation: evalRound,
+            calculationTotal: [evalRound],
+            operatorBox: calculationTotal.slice(calculationTotal.length - 2),
+          };
+        }
       }
-      //정수가 아닐때(소수점 O)
+      //정수가 아니고 합계가 9,999,999,999보다 클때(소수점 O)
       if (Number.isInteger(eval(changeString)) === false) {
-        const evalRound = +eval(changeString).toString().split();
-        const result = evalRound;
-        return {
-          ...state,
-          viewCalculation: result,
-          calculationTotal: [],
-          operatorBox: state.calculationTotal.slice(
-            state.calculationTotal.length - 2,
-          ),
-        };
+        if (+eval(changeString) > MAX_NUMBER) {
+          return {
+            ...state,
+            viewCalculation: MAX_NUMBER,
+            calculationTotal: [MAX_NUMBER],
+          };
+        } else {
+          const evalRound = +eval(changeString).toString().split();
+          const result = evalRound;
+          return {
+            ...state,
+            viewCalculation: result,
+            calculationTotal: [result],
+            operatorBox: calculationTotal.slice(calculationTotal.length - 4),
+          };
+        }
       }
-
     default:
       return state;
   }

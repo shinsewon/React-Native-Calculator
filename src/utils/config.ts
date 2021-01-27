@@ -1,4 +1,4 @@
-export const BUTTON = [
+export const BUTTONS = [
   'C',
   'DEL',
   '/',
