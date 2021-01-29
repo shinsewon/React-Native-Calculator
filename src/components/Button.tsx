@@ -1,4 +1,4 @@
-import React, {memo} from 'react';
+import React, {memo, useMemo} from 'react';
 import {StyleSheet, Text, TouchableOpacity} from 'react-native';
 
 interface IBtnProps {
